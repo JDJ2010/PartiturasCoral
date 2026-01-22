@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Biblioteca de Partituras</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>🎼 Biblioteca de Partituras</h1>
+    <a href="/login.html" class="admin-btn">Modo administrador</a>
+  </header>
+
+  <main id="contenedor-partituras">
+    <p>Cargando partituras...</p>
+  </main>
+
+  <script>
+    // Cargar partituras desde el servidor
+    fetch("/api/partituras")
+      .then(res => res.json())
+      .then(data => {
+        const contenedor = document.getElementById("contenedor-partituras");
+        contenedor.innerHTML = "";
+
+        if (data.partituras.length === 0) {
+          contenedor.innerHTML = "<p>No hay partituras todavía.</p>";
+          return;
+        }
+
+        data.partituras.forEach(p => {
+          const audios = data.audios.filter(a => a.partitura_id === p.id);
+
+          const div = document.createElement("div");
+          div.className = "partitura";
+
+          let html = `<h2>${p.titulo}</h2><p><strong>Autor:</strong> ${p.autor}</p>`;
+          html += `<a class="descargar" href="/uploads/partituras/${p.archivo}" download>📥 Descargar partitura</a>`;
+
+          if (audios.length > 0) {
+            html += "<h3>Audios</h3>";
+            audios.forEach(a => {
+              html += `<div class="audio"><p>${a.titulo}</p><audio controls src="/uploads/audios/${a.archivo}"></audio></div>`;
+            });
+          }
+
+          div.innerHTML = html;
+          contenedor.appendChild(div);
+        });
+      })
+      .catch(err => {
+        const contenedor = document.getElementById("contenedor-partituras");
+        contenedor.innerHTML = "<p>Error cargando partituras.</p>";
+        console.error(err);
+      });
+  </script>
+
+</body>
+</html>

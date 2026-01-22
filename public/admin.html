@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Administrador</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🎼 Panel Administrador</h1>
+  </header>
+
+  <section class="subida">
+    <h2>Subir Partitura + Audios</h2>
+    <form action="/admin/partitura-audio" method="POST" enctype="multipart/form-data">
+      <input type="text" name="titulo" placeholder="Título de la partitura" required>
+      <input type="text" name="autor" placeholder="Autor" required>
+      <input type="file" name="partitura" accept=".pdf,.png,.jpg" required>
+      <input type="file" name="audios" accept=".mp3,.wav" multiple>
+      <button type="submit">Subir</button>
+    </form>
+  </section>
+
+  <section class="partituras">
+    <h2>Partituras actuales</h2>
+    <div id="lista-partituras">
+      <p>Cargando...</p>
+    </div>
+  </section>
+
+  <script>
+    function cargarPartituras() {
+      fetch("/api/partituras")
+        .then(res => res.json())
+        .then(data => {
+          const lista = document.getElementById("lista-partituras");
+          lista.innerHTML = "";
+
+          if (data.partituras.length === 0) {
+            lista.innerHTML = "<p>No hay partituras aún.</p>";
+            return;
+          }
+
+          data.partituras.forEach(p => {
+            const audios = data.audios.filter(a => a.partitura_id === p.id);
+
+            const div = document.createElement("div");
+            div.className = "partitura-admin";
+
+            let html = `<h3>${p.titulo} - ${p.autor}</h3>`;
+            html += `<a href="/uploads/partituras/${p.archivo}" download>📥 Descargar</a>`;
+            html += ` <a href="/admin/delete-partitura/${p.id}" class="borrar">❌ Borrar</a>`;
+
+            if (audios.length > 0) {
+              html += "<ul>";
+              audios.forEach(a => {
+                html += `<li>${a.titulo} - <audio controls src="/uploads/audios/${a.archivo}"></audio></li>`;
+              });
+              html += "</ul>";
+            }
+
+            div.innerHTML = html;
+            lista.appendChild(div);
+          });
+        });
+    }
+
+    cargarPartituras();
+  </script>
+</body>
+</html>
